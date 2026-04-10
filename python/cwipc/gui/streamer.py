@@ -5,7 +5,7 @@ from typing import Generator
 
 from cwipc.util import cwipc_activesource_wrapper, cwipc_synthetic
 
-from .pointcloud import Pointcloud
+from .utility.pointcloud import PointCloud
 
 
 class Streamer:
@@ -32,18 +32,18 @@ class Streamer:
         # Store internals
         self._generator: cwipc_activesource_wrapper = generator
 
-    def generator(self) -> Generator[Pointcloud, None, None]:
+    def generator(self) -> Generator[PointCloud, None, None]:
         """
         Yields a stream of point clouds.
         """
 
         while True:
-            # todo: this is currently throwing an exception!
-            # pointcloud = self._generator.get()
-            #if not pointcloud:
-            #    raise RuntimeError("Must have a point cloud")
+            # todo: currently this is throwing a nullptr exception due to some issues with PyQt5 import before cwipc_synthetic instance is created!
+            # point_cloud = self._generator.get()
+            # if not point_cloud:
+            #     raise RuntimeError("Must have a point cloud")
 
-            #assert isinstance(pointcloud, Pointcloud), "Wrong pointcloud instance"
-            #yield pointcloud
+            # assert isinstance(pointcloud, Pointcloud), "Wrong pointcloud instance"
+            # yield pointcloud
 
-            yield Pointcloud()
+            yield PointCloud()
