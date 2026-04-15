@@ -185,8 +185,9 @@ class PointCloudWidget(QOpenGLWidget):
 
         if self._configuration.allow_control:
             key = event.key()
-            self._key_map.remove(key)
-            event.accept()
+            if key in self._key_map:
+                self._key_map.remove(key)
+                event.accept()
 
         super().keyReleaseEvent(event)
 

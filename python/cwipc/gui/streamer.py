@@ -38,12 +38,8 @@ class Streamer:
         """
 
         while True:
-            # todo: currently this is throwing a nullptr exception due to some issues with PyQt5 import before cwipc_synthetic instance is created!
-            # point_cloud = self._generator.get()
-            # if not point_cloud:
-            #     raise RuntimeError("Must have a point cloud")
+            point_cloud = self._generator.get()
+            if not point_cloud:
+                raise RuntimeError("Must have a point cloud")
 
-            # assert isinstance(pointcloud, Pointcloud), "Wrong pointcloud instance"
-            # yield pointcloud
-
-            yield PointCloud()
+            yield PointCloud(point_cloud)

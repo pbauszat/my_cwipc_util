@@ -1,6 +1,8 @@
 """
 A point cloud wrapper class.
 """
+import numpy as np
+
 from typing import Optional
 
 from ...util import cwipc_pointcloud_wrapper
@@ -47,3 +49,20 @@ class PointCloud:
         """
 
         return self._source.count() if self._source else 0
+
+    @property
+    def points(self) -> np.ndarray:
+        """
+        Returns the points in the point cloud.
+
+        :return: The points.
+        """
+
+        if self._source:
+            data = self._source.get_numpy_matrix()
+            data = data[:, 0:6]
+            data[:, 3:] /= 255.0
+        else:
+            data = np.zeros(shape=(0, 6), dtype=np.float32)
+
+        return data
