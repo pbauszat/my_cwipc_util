@@ -11,21 +11,18 @@ The workaround to the problem is to use a custom exception handler as follows:
 import pathlib
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.uic import loadUi as Qt_load_ui
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
+from PySide6.QtUiTools import QUiLoader
+from typing import Optional
 
 
 class MainWindow(QMainWindow):
     """
     MainWindow is the base class for all Qt-based frontends.
 
-    Its main purpose is setup the Qt application and hide away the workaround for the system exception hook problem.
+    Its main purpose is to set up the Qt application and hide away the workaround for the system exception hook problem.
     Note that as long as an instance of this class exists, the system hook is re-routed.
     """
-
-    # =================================================================================================================================================================================================
-    # Public interface
-    # =================================================================================================================================================================================================
 
     def __init__(self) -> None:
         """
@@ -44,22 +41,47 @@ class MainWindow(QMainWindow):
         # Invoke the constructor of the QMainWindow base class which will then use the existing Qt application
         super().__init__()
 
+        # Create an internal UI object
+        self._ui_instance: Optional[QWidget] = None
+
     def __del__(self) -> None:
         """
         Destructor.
         """
 
         # Restore the exception hook after the Qt application is finished
-        sys.excepthook = self._default_exception_hook
+        # todo: this check is required because something crazy happens to the sys module. that should be fixed!
+        if sys:
+            sys.excepthook = self._default_exception_hook
 
     def load_ui(self, filename: pathlib.Path) -> None:
         """
         Loads the UI from the provided file.
 
+        # todo: this service is currently provided for runtime loading of UI files.
+        # todo: Use the better way of compiling the UI file.
+
         :return: None.
         """
 
-        Qt_load_ui(filename, self)
+        # Load the UI into an object
+        loader = QUiLoader()
+        self._ui_instance = loader.load(filename, self)
+        assert self._ui_instance, "UI load failed."
+
+        # Hand over ownership of the central widget or make the UI the central widget
+        if isinstance(self._ui_instance, QMainWindow):
+            central_widget = self._ui_instance.centralWidget()
+            self.setCentralWidget(central_widget)
+        else:
+            self.setCentralWidget(self._ui_instance)
+
+        # Manually attach the UI's children to "self"
+        # todo: this is a hack to keep previous code compatible
+        for widget in self.centralWidget().findChildren(QWidget):
+            object_name = widget.objectName()
+            if object_name:
+                setattr(self, object_name, widget)
 
     def run(self) -> int:
         """
@@ -70,9 +92,9 @@ class MainWindow(QMainWindow):
 
         return self._application.exec()
 
-    # =================================================================================================================================================================================================
-    # Private methods
-    # =================================================================================================================================================================================================
+    """
+    Internals.
+    """
 
     def _custom_exception_hook(self, exception_type, value, traceback) -> None:
         """

@@ -2,18 +2,20 @@
 A Qt OpenGLWidget which displays point clouds and allows for user exploration.
 """
 import time
+import traceback
 
 from dataclasses import dataclass
-from PyQt5.QtCore import Qt, QPointF, QTimer
-from PyQt5.QtGui import QSurfaceFormat, QKeyEvent, QMouseEvent, QWheelEvent
-from PyQt5.QtWidgets import QOpenGLWidget, QWidget
+from PySide6.QtCore import Qt, QPointF, QTimer
+from PySide6.QtGui import QSurfaceFormat, QKeyEvent, QMouseEvent, QWheelEvent
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtWidgets import QWidget
 from typing import Optional
 
 from .controller import Controller
 from .renderer import Renderer
 
-from ..utility.pointcloud import PointCloud
 from ..utility.transform import Transform
+from ..wrapper.pointcloud import PointCloud
 
 
 class PointCloudWidget(QOpenGLWidget):
@@ -55,9 +57,9 @@ class PointCloudWidget(QOpenGLWidget):
         # (2) Setup surface format
         surface_format = QSurfaceFormat.defaultFormat()
         surface_format.setVersion(4, 3)
-        surface_format.setProfile(QSurfaceFormat.CoreProfile)
-        surface_format.setOption(QSurfaceFormat.DebugContext)  # Toggle debugging off for more performance
-        surface_format.setSwapBehavior(QSurfaceFormat.DoubleBuffer)
+        surface_format.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
+        surface_format.setOption(QSurfaceFormat.FormatOption.DebugContext)  # Toggle debugging off for more performance
+        surface_format.setSwapBehavior(QSurfaceFormat.SwapBehavior.DoubleBuffer)
         surface_format.setRedBufferSize(8)
         surface_format.setGreenBufferSize(8)
         surface_format.setBlueBufferSize(8)
@@ -80,7 +82,7 @@ class PointCloudWidget(QOpenGLWidget):
 
         # (5) Set strong focus and enable mouse tracking for the widget to always receive keyboard and mouse inputs
         if configuration.allow_control:
-            self.setFocusPolicy(Qt.StrongFocus)
+            self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
             self.setMouseTracking(True)
 
         # (6) Set up a timer that triggers the internal "game loop" at a regular interval
@@ -101,7 +103,13 @@ class PointCloudWidget(QOpenGLWidget):
         """
 
         super().initializeGL()
-        self._renderer.initialize()
+
+        # Initialize with special exception handling because initializeGL() swallows exceptions
+        try:
+            self._renderer.initialize()
+        except Exception as e:
+            traceback.print_exc()
+            exit(1)
 
     def resizeGL(self, width: int, height: int) -> None:
         """
@@ -136,10 +144,9 @@ class PointCloudWidget(QOpenGLWidget):
             self._renderer.update_data(self._point_cloud)
             self._point_cloud = None
 
-        # Update transform
+        # Update transforms
         camera_transform = self._controller.transform.inverted()
-        final_transform = Transform.multiply(self._projection_transform, camera_transform)
-        self._renderer.update_transform(final_transform)
+        self._renderer.update_transform(self._projection_transform, camera_transform)
 
         # Render the point cloud
         self._renderer.render()
@@ -169,9 +176,19 @@ class PointCloudWidget(QOpenGLWidget):
 
         if self._configuration.allow_control:
             key = event.key()
-            if key in {Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D, Qt.Key_Space}:
+            accepted_keymap_keys = {
+                Qt.Key.Key_W, Qt.Key.Key_A, Qt.Key.Key_S, Qt.Key.Key_D,
+                Qt.Key.Key_Up, Qt.Key.Key_Left, Qt.Key.Key_Down, Qt.Key.Key_Right,
+                Qt.Key.Key_Space
+            }
+            if key in accepted_keymap_keys:
                 self._key_map.add(key)
                 event.accept()
+
+            if key == Qt.Key.Key_1:
+                self._renderer.set_mode(Renderer.Mode.SIMPLE)
+            if key == Qt.Key.Key_2:
+                self._renderer.set_mode(Renderer.Mode.SIZED_POINTS)
 
         super().keyPressEvent(event)
 
@@ -187,7 +204,7 @@ class PointCloudWidget(QOpenGLWidget):
             key = event.key()
             if key in self._key_map:
                 self._key_map.remove(key)
-                event.accept()
+            event.accept()
 
         super().keyReleaseEvent(event)
 
@@ -213,7 +230,7 @@ class PointCloudWidget(QOpenGLWidget):
         """
 
         if self._configuration.allow_control:
-            if event.buttons() == Qt.LeftButton:
+            if event.buttons() == Qt.MouseButton.LeftButton:
                 difference = self._mouse_click_position - event.localPos()
                 self._mouse_click_position = event.localPos()
                 yaw = difference.x() * self._configuration.mouse_sensitivity
@@ -261,15 +278,15 @@ class PointCloudWidget(QOpenGLWidget):
             move_speed = elapsed_seconds * self._configuration.move_speed
 
             # Handle keys
-            if Qt.Key_W in self._key_map:
+            if {Qt.Key.Key_W, Qt.Key.Key_Up} & self._key_map:
                 self._controller.forward(-move_speed)
-            if Qt.Key_A in self._key_map:
+            if {Qt.Key.Key_A, Qt.Key.Key_Left} & self._key_map:
                 self._controller.strafe(-move_speed)
-            if Qt.Key_S in self._key_map:
+            if {Qt.Key.Key_S, Qt.Key.Key_Down} & self._key_map:
                 self._controller.forward(move_speed)
-            if Qt.Key_D in self._key_map:
+            if {Qt.Key.Key_D, Qt.Key.Key_Right} & self._key_map:
                 self._controller.strafe(move_speed)
-            if Qt.Key_Space in self._key_map:
+            if Qt.Key.Key_Space in self._key_map:
                 self._controller.reset()
 
         # Force repaint

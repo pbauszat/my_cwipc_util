@@ -16,7 +16,7 @@ class Vector:
     z: float = 0.0
 
     @staticmethod
-    def normalize(v: "Vector") -> "Vector":
+    def normalize(v: Vector) -> Vector:
         """
         Returns the normalized input vector.
 
@@ -28,7 +28,7 @@ class Vector:
         normalized = a / norm if norm > 0 else a
         return Vector(*normalized.tolist())
 
-    def __add__(self, other: "Vector") -> "Vector":
+    def __add__(self, other: Vector) -> Vector:
         """
         Implements the addition of two vectors.
 
@@ -38,7 +38,7 @@ class Vector:
 
         return Vector(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __mul__(self, other: "float | Vector") -> "Vector":
+    def __mul__(self, other: float | Vector) -> Vector:
         """
         Implements component-wise multiplication with a scalar of another vector.
 

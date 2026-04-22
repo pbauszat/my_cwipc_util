@@ -5,7 +5,7 @@ import numpy as np
 
 from typing import Optional
 
-from ...util import cwipc_pointcloud_wrapper
+from ....util import cwipc_pointcloud_wrapper
 
 
 class PointCloud:
