@@ -189,6 +189,10 @@ class PointCloudWidget(QOpenGLWidget):
                 self._renderer.set_mode(Renderer.Mode.SIMPLE)
             if key == Qt.Key.Key_2:
                 self._renderer.set_mode(Renderer.Mode.SIZED_POINTS)
+            if key == Qt.Key.Key_Plus:
+                self._renderer.set_point_size_factor(self._renderer.point_size_factor + 1.0)
+            if key == Qt.Key.Key_Minus:
+                self._renderer.set_point_size_factor(self._renderer.point_size_factor - 1.0)
 
         super().keyPressEvent(event)
 

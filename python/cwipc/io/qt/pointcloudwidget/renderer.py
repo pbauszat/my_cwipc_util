@@ -168,3 +168,30 @@ class Renderer:
         """
 
         return self._mode
+
+    """
+    Point size.
+    """
+
+    def set_point_size_factor(self, point_size_factor: float) -> float:
+        """
+        Sets the point size factor.
+
+        The point size factor cannot be smaller than 1.
+
+        :param point_size_factor: The new point size factor.
+        :return: The new value.
+        """
+
+        self._point_size_factor = max(1.0, point_size_factor)
+        return self._point_size_factor
+
+    @property
+    def point_size_factor(self) -> float:
+        """
+        Returns the point size factor.
+
+        :return: The point size factor.
+        """
+
+        return self._point_size_factor
