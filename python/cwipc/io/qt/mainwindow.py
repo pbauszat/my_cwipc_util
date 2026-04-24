@@ -54,35 +54,6 @@ class MainWindow(QMainWindow):
         if sys:
             sys.excepthook = self._default_exception_hook
 
-    def load_ui(self, filename: pathlib.Path) -> None:
-        """
-        Loads the UI from the provided file.
-
-        # todo: this service is currently provided for runtime loading of UI files.
-        # todo: Use the better way of compiling the UI file.
-
-        :return: None.
-        """
-
-        # Load the UI into an object
-        loader = QUiLoader()
-        self._ui_instance = loader.load(filename, self)
-        assert self._ui_instance, "UI load failed."
-
-        # Hand over ownership of the central widget or make the UI the central widget
-        if isinstance(self._ui_instance, QMainWindow):
-            central_widget = self._ui_instance.centralWidget()
-            self.setCentralWidget(central_widget)
-        else:
-            self.setCentralWidget(self._ui_instance)
-
-        # Manually attach the UI's children to "self"
-        # todo: this is a hack to keep previous code compatible
-        for widget in self.centralWidget().findChildren(QWidget):
-            object_name = widget.objectName()
-            if object_name:
-                setattr(self, object_name, widget)
-
     def run(self) -> int:
         """
         Runs the main event loop of the application.
