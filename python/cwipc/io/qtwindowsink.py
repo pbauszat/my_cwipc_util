@@ -80,10 +80,12 @@ class QtWindowSink(MainWindow, cwipc_sink_abstract, metaclass=CombinedMeta):
         """
         Stop the sink.
 
+        Stops the sink by simply closing the window.
+
         :return: None.
         """
 
-        pass
+        self.hide()
 
     def set_producer(self, producer: cwipc_producer_abstract) -> None:
         """
@@ -93,6 +95,7 @@ class QtWindowSink(MainWindow, cwipc_sink_abstract, metaclass=CombinedMeta):
         :return: None.
         """
 
+        # todo: does this have to store a producer instance as the Visualizer class does?
         pass
 
     def feed(self, point_cloud: cwipc_pointcloud_wrapper) -> None:
@@ -111,7 +114,7 @@ class QtWindowSink(MainWindow, cwipc_sink_abstract, metaclass=CombinedMeta):
         """
         Prints statistics.
 
-        todo: implement me.
+        todo: Mo statistics are implemented yet.
 
         :return: None.
         """
